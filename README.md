@@ -20,7 +20,7 @@ RedisCache is my personal Go project, which enables multiple clients to get, set
 
 #### Settings 
 If you want to change the behaviour of server, you can use the command:
-`go run . --mode=config --dbAddress=<dbHost>:<dbPort> --ipAddress=<ipHost>:<ipPort> --ttlMinutes:<ttlMinutes>`
+`go run . -M config --dbAddress=<dbHost>:<dbPort> --ipAddress=<ipHost>:<ipPort> --ttlMinutes:<ttlMinutes>`
 
 It simply creates a settings.json with the following environment variables: 
 
@@ -35,12 +35,12 @@ It simply creates a settings.json with the following environment variables:
 #### Arguments
 These are the arguments that a client may use when sending a request using CLI program. 
 
-| Name | Description                     | Type | Options | Default |
-| :----: | :-----------------------------: | :-: | :-------: | :-------: |
-| mode | Server side or client side  | string | "client", "server", "config" | "server"  |
-| method | What to do | string | "/", "/get", "/set", "/delete" | "/" |
-| db | Which database | int | 0, 1, … | 0 |
-| key, value | Key-value pairs | string | - | "" |
+| Name | Alias | Description                     | Type | Options | Default |
+| :----: | :---: | :-----------------------------: | :-: | :-------: | :-------: |
+| mode | M | Server side or client side  | string | "client", "server", "config" | "server"  |
+| method | X | What to do | string | "", "get", "set", "delete" | "" |
+| db | - | Which database | int | 0, 1, … | 0 |
+| key, value | k, v | Key-value pairs | string | - | "" |
 
 Also, you can directly launch the client using the function in modes package
 `func StartClient(settings Settings, filters ...Filter) error`

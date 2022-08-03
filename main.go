@@ -56,7 +56,7 @@ func setupSettings() modes.Settings {
 }
 
 func parseArgs() (string, []modes.Filter) {
-	mode := flag.String("mode", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
+	mode := flag.StringP("mode", "M", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
 
 	// Config
 	dbAddress := flag.String("dbAddress", "localhost:6379", fmt.Sprintf("<database address>"))
@@ -64,9 +64,9 @@ func parseArgs() (string, []modes.Filter) {
 	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("<time to live in minutes>"))
 
 	// Client
-	method := flag.String("method", "/", fmt.Sprintf("/%s / /%s / /%s / /%s", "", "get", "set", "delete"))
-	key := flag.String("key", "", "")
-	value := flag.String("value", "", "")
+	method := flag.StringP("method", "X", "", fmt.Sprintf("%s | %s | %s | %s", "", "get", "set", "delete"))
+	key := flag.StringP("key", "k", "", "")
+	value := flag.StringP("value", "v", "", "")
 	db := flag.String("db", "0", "")
 
 	flag.Parse()
