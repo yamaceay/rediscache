@@ -38,12 +38,3 @@ func StartClient(settings Settings, filters ...Filter) error {
 	fmt.Println(string(bodyString))
 	return nil
 }
-
-func getFilter(key string, filters []Filter) (string, error) {
-	for _, filter := range filters {
-		if filter.Key == key {
-			return filter.Value, nil
-		}
-	}
-	return "", fmt.Errorf("no filter found")
-}

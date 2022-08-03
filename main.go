@@ -22,15 +22,18 @@ func handleMode(mode string, settings modes.Settings, filters ...modes.Filter) e
 		if err := modes.StartServer(settings, filters...); err != nil {
 			return fmt.Errorf("server couldn't be started: %s", err)
 		}
-		return nil
-	}
-	if mode == modes.ClientMode {
+	} else if mode == modes.ClientMode {
 		if err := modes.StartClient(settings, filters...); err != nil {
 			return fmt.Errorf("client couldn't be started: %s", err)
 		}
-		return nil
+	} else if mode == modes.ConfigMode {
+		if err := modes.CreateSettings(filters...); err != nil {
+			return fmt.Errorf("settings.json couldn't be configured: %s", err)
+		}
+	} else {
+		return fmt.Errorf("no valid mode given")
 	}
-	return fmt.Errorf("no valid mode given")
+	return nil
 }
 
 func setupSettings() modes.Settings {
@@ -54,6 +57,13 @@ func setupSettings() modes.Settings {
 
 func parseArgs() (string, []modes.Filter) {
 	mode := flag.String("mode", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
+
+	// Config
+	dbAddress := flag.String("dbAddress", "localhost:6379", fmt.Sprintf("<database address>"))
+	ipAddress := flag.String("ipAddress", "localhost:8080", fmt.Sprintf("<application address>"))
+	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("<time to live in minutes>"))
+
+	// Client
 	method := flag.String("method", "", fmt.Sprintf("%s / %s / %s / %s", "", "get", "set", "delete"))
 	key := flag.String("key", "", "")
 	value := flag.String("value", "", "")
@@ -66,6 +76,10 @@ func parseArgs() (string, []modes.Filter) {
 		{Key: "value", Value: *value},
 		{Key: "method", Value: *method},
 		{Key: "db", Value: *db},
+
+		{Key: "dbAddress", Value: *dbAddress},
+		{Key: "ipAddress", Value: *ipAddress},
+		{Key: "ttlMinutes", Value: *ttlMinutes},
 	}
 
 	return *mode, filters
