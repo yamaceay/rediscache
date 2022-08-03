@@ -54,7 +54,7 @@ func setupSettings() modes.Settings {
 
 func parseArgs() (string, []modes.Filter) {
 	mode := flag.String("mode", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
-	method := flag.String("method", "get", fmt.Sprintf("%s / %s / %s", "get", "set", "delete"))
+	method := flag.String("method", "", fmt.Sprintf("%s / %s / %s / %s", "", "get", "set", "delete"))
 	key := flag.String("key", "", "")
 	value := flag.String("value", "", "")
 	db := flag.String("db", "0", "")
