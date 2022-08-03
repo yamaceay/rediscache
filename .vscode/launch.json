@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "main.go",
-            "args": ["--mode=client", "--method=get", "--key=BOSCH-HBG8769S6-68A40E1345C8"],
+            "args": ["--mode=client", "--method=get", "--key=a", "--value=6"],
         }
     ]
 }

@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  cache:
+    image: redis
+    command: redis-server
+    ports:
+      - 6379:6379
+  app:
+    image: yamaceay/rediscache_app
+    build: .
+    depends_on:
+      - cache
+    ports:
+      - 8080:8080
+    volumes: 
+      - cache:/data
+    links:
+    - cache
+volumes:
+  cache:
+    driver: local
