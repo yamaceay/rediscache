@@ -6,18 +6,9 @@ import (
 	"net/http"
 )
 
-var CLIENT_SETTINGS Settings
-
-func StartClient(settings Settings, filters ...Filter) error {
-	CLIENT_SETTINGS = settings
-
-	method, _ := getFilter("method", filters)
-	key, _ := getFilter("key", filters)
-	value, _ := getFilter("value", filters)
-	db, _ := getFilter("db", filters)
-
-	ipAddress := CLIENT_SETTINGS.IpAddress()
-	fullPath := fmt.Sprintf("http://%s/%s/%s", ipAddress, db, method)
+func StartClient(settings ServerSettings, request ClientRequest) error {
+	ipAddress := settings.IpAddress()
+	fullPath := fmt.Sprintf("http://%s/%d/%s", ipAddress, request.Db, request.Method)
 
 	req, err := http.NewRequest("GET", fullPath, nil)
 	if err != nil {
@@ -25,8 +16,8 @@ func StartClient(settings Settings, filters ...Filter) error {
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	q := req.URL.Query()
-	q.Add("key", key)
-	q.Add("value", value)
+	q.Add("key", request.Key)
+	q.Add("value", request.Value)
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := http.DefaultClient.Do(req)

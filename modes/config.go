@@ -3,20 +3,11 @@ package modes
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"strconv"
 )
 
-func CreateSettings(filters ...Filter) error {
-	ipAddress, _ := getFilter("ipAddress", filters)
-	ipHost, ipPort := fromAddress(ipAddress)
-
-	dbAddress, _ := getFilter("dbAddress", filters)
-	dbHost, dbPort := fromAddress(dbAddress)
-
-	ttlMinutesString, _ := getFilter("ttlMinutes", filters)
-	ttlMinutes, _ := strconv.Atoi(ttlMinutesString)
-
+func SaveSettings(settings ServerSettings) error {
 	os.Truncate("settings.json", 0)
 
 	file, err := os.OpenFile("settings.json", os.O_WRONLY, 0600)
@@ -26,21 +17,34 @@ func CreateSettings(filters ...Filter) error {
 		return fmt.Errorf("settings.json couldn't be opened")
 	}
 
-	settings := Settings{
-		IpHost:     ipHost,
-		IpPort:     ipPort,
-		DbHost:     dbHost,
-		DbPort:     dbPort,
-		TTLMinutes: ttlMinutes,
-	}
-
 	settingsMarshalled, _ := json.MarshalIndent(settings, "", "  ")
 	settingsString := string(settingsMarshalled)
 	if _, err := file.WriteString(settingsString); err != nil {
 		return fmt.Errorf("settings cannot be written")
 	} else {
-		fmt.Println(settingsString)
+		// fmt.Println(settingsString)
 	}
 
 	return nil
+}
+
+func ReadSettings() ServerSettings {
+	defaultSettings := ServerSettings{
+		DbHost:     "localhost",
+		DbPort:     6379,
+		IpHost:     "localhost",
+		IpPort:     8080,
+		TTLMinutes: 10080,
+	}
+	file, err := os.Open("settings.json")
+	defer file.Close()
+	if err == nil {
+		var settings ServerSettings
+		if settingsBytes, err := ioutil.ReadAll(file); err == nil {
+			if err := json.Unmarshal(settingsBytes, &settings); err == nil {
+				return settings
+			}
+		}
+	}
+	return defaultSettings
 }

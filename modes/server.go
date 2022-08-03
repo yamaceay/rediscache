@@ -13,14 +13,14 @@ import (
 	"github.com/uptrace/bunrouter/extra/reqlog"
 )
 
-var SERVER_SETTINGS Settings
+var SERVER_SETTINGS ServerSettings
 
 type requestHandler struct {
 	client *redis.Client
 	mutex  *sync.RWMutex
 }
 
-func StartServer(settings Settings, filters ...Filter) error {
+func StartServer(settings ServerSettings) error {
 	router := initRouter()
 	SERVER_SETTINGS = settings
 	listenTo := fmt.Sprintf(":%d", SERVER_SETTINGS.IpPort)
