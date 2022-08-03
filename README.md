@@ -1,4 +1,4 @@
-## v1.0.0
+## v1.0.1
 
 #### Introduction to RedisCache
 RedisCache is my personal Go project, which enables multiple clients to get, set, delete and update data
