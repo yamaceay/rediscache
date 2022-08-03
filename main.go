@@ -64,7 +64,7 @@ func parseArgs() (string, []modes.Filter) {
 	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("<time to live in minutes>"))
 
 	// Client
-	method := flag.String("method", "", fmt.Sprintf("%s / %s / %s / %s", "", "get", "set", "delete"))
+	method := flag.String("method", "/", fmt.Sprintf("/%s / /%s / /%s / /%s", "", "get", "set", "delete"))
 	key := flag.String("key", "", "")
 	value := flag.String("value", "", "")
 	db := flag.String("db", "0", "")

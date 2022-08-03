@@ -1,4 +1,4 @@
-## v1.0.1
+## v1.0.2
 
 #### Introduction to RedisCache
 RedisCache is my personal Go project, which enables multiple clients to get, set, delete and update data
@@ -38,7 +38,7 @@ These are the arguments that a client may use when sending a request using CLI p
 | Name | Description                     | Type | Options | Default |
 | :----: | :-----------------------------: | :-: | :-------: | :-------: |
 | mode | Server side or client side  | string | "client", "server", "config" | "server"  |
-| method | What to do | string | "", "get", "set", "delete" | "" |
+| method | What to do | string | "/", "/get", "/set", "/delete" | "/" |
 | db | Which database | int | 0, 1, … | 0 |
 | key, value | Key-value pairs | string | - | "" |
 

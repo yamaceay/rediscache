@@ -17,7 +17,7 @@ func StartClient(settings Settings, filters ...Filter) error {
 	db, _ := getFilter("db", filters)
 
 	ipAddress := CLIENT_SETTINGS.IpAddress()
-	fullPath := fmt.Sprintf("http://%s/%s/%s", ipAddress, db, method)
+	fullPath := fmt.Sprintf("http://%s/%s%s", ipAddress, db, method)
 
 	req, err := http.NewRequest("GET", fullPath, nil)
 	if err != nil {
