@@ -81,9 +81,9 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 		var prettyJSON bytes.Buffer
 		if err := json.Indent(&prettyJSON, []byte(value), "", "  "); err != nil {
 			w.Write([]byte(value))
-			return fmt.Errorf("unable to indent json object: %s", err)
+		} else {
+			w.Write(prettyJSON.Bytes())
 		}
-		w.Write(prettyJSON.Bytes())
 	}
 	return nil
 }
