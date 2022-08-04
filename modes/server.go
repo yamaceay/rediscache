@@ -64,25 +64,24 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	db, _ := strconv.Atoi(queries.Get("db"))
 
 	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
-	if key != "" {
-		value, err := handler.readOne(key)
-		if err != nil {
-			return fmt.Errorf("object with key %s cannot be read: %s", key, err)
-		} else {
-			var prettyJSON bytes.Buffer
-			if err := json.Indent(&prettyJSON, []byte(value), "", "  "); err != nil {
-				return fmt.Errorf("unable to indent json object: %s", err)
-			}
-			w.Write(prettyJSON.Bytes())
-		}
-	} else {
-		keys, err := handler.readAll()
-		if err != nil {
+	if key == "" {
+		if keys, err := handler.readAll(); err != nil {
 			return fmt.Errorf("keys cannot be read: %s", err)
 		} else {
 			keysMarshalled, _ := json.MarshalIndent(keys, "", "  ")
 			w.Write(keysMarshalled)
 		}
+		return nil
+	}
+
+	if value, err := handler.readOne(key); err != nil {
+		return fmt.Errorf("object with key %s cannot be read: %s", key, err)
+	} else {
+		var prettyJSON bytes.Buffer
+		if err := json.Indent(&prettyJSON, []byte(value), "", "  "); err != nil {
+			return fmt.Errorf("unable to indent json object: %s", err)
+		}
+		w.Write(prettyJSON.Bytes())
 	}
 	return nil
 }
