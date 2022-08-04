@@ -1,6 +1,7 @@
 package modes
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -62,20 +63,24 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	key := queries.Get("key")
 	db, _ := strconv.Atoi(queries.Get("db"))
 
-	handler := initHandler(SERVER_SETTINGS.DbAddress(), db)
+	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
 	if key != "" {
 		value, err := handler.readOne(key)
 		if err != nil {
 			return fmt.Errorf("object with key %s cannot be read: %s", key, err)
 		} else {
-			w.Write([]byte(value))
+			var prettyJSON bytes.Buffer
+			if err := json.Indent(&prettyJSON, []byte(value), "", "  "); err != nil {
+				return fmt.Errorf("unable to indent json object: %s", err)
+			}
+			w.Write(prettyJSON.Bytes())
 		}
 	} else {
 		keys, err := handler.readAll()
 		if err != nil {
 			return fmt.Errorf("keys cannot be read: %s", err)
 		} else {
-			keysMarshalled, _ := json.Marshal(keys)
+			keysMarshalled, _ := json.MarshalIndent(keys, "", "  ")
 			w.Write(keysMarshalled)
 		}
 	}
@@ -89,23 +94,21 @@ func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	value := queries.Get("value")
 	db, _ := strconv.Atoi(queries.Get("db"))
 
-	handler := initHandler(SERVER_SETTINGS.DbAddress(), db)
+	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
 	if key == "" {
 		return fmt.Errorf("no key given")
 	}
-	if value == "" {
-		if err := handler.deleteOne(key); err != nil {
+	if err := handler.writeOne(key, value); err != nil {
+		if value == "" {
 			return fmt.Errorf("object with key %s couldn't be deleted: %s", key, err)
-		}
-	} else {
-		if err := handler.writeOne(key, value); err != nil {
+		} else {
 			return fmt.Errorf("object with key %s couldn't be set to %s: %s", key, value, err)
 		}
 	}
 	return nil
 }
 
-func initHandler(addr string, db int) requestHandler {
+func newHandler(addr string, db int) *requestHandler {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
@@ -118,7 +121,7 @@ func initHandler(addr string, db int) requestHandler {
 		client: redisClient,
 		mutex:  &sync.RWMutex{},
 	}
-	return handler
+	return &handler
 }
 
 func (h *requestHandler) readOne(key string) (string, error) {
@@ -142,14 +145,6 @@ func (h *requestHandler) writeOne(key string, value string) error {
 
 	h.mutex.Lock()
 	_, err := h.client.Set(key, value, minutes*time.Minute).Result()
-	h.mutex.Unlock()
-
-	return err
-}
-
-func (h *requestHandler) deleteOne(key string) error {
-	h.mutex.Lock()
-	_, err := h.client.Del(key).Result()
 	h.mutex.Unlock()
 
 	return err
