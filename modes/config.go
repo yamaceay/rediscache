@@ -57,7 +57,7 @@ func SaveSettings(settings ServerSettings) error {
 
 func ReadSettings() ServerSettings {
 	defaultSettings := ServerSettings{
-		DbHost:     "localhost",
+		DbHost:     "cache",
 		DbPort:     6379,
 		IpHost:     "localhost",
 		IpPort:     8080,

@@ -59,9 +59,10 @@ func dbHandler(w http.ResponseWriter, req bunrouter.Request) error {
 
 func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	queries := req.URL.Query()
-
 	key := queries.Get("key")
-	db, _ := strconv.Atoi(queries.Get("db"))
+
+	params := req.Params().Map()
+	db, _ := strconv.Atoi(params["db"])
 
 	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
 	if key == "" {
@@ -79,6 +80,7 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	} else {
 		var prettyJSON bytes.Buffer
 		if err := json.Indent(&prettyJSON, []byte(value), "", "  "); err != nil {
+			w.Write([]byte(value))
 			return fmt.Errorf("unable to indent json object: %s", err)
 		}
 		w.Write(prettyJSON.Bytes())
@@ -88,10 +90,11 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 
 func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	queries := req.URL.Query()
-
 	key := queries.Get("key")
 	value := queries.Get("value")
-	db, _ := strconv.Atoi(queries.Get("db"))
+
+	params := req.Params().Map()
+	db, _ := strconv.Atoi(params["db"])
 
 	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
 	if key == "" {
@@ -114,7 +117,7 @@ func newHandler(addr string, db int) *requestHandler {
 		DB:       db,
 	})
 	if _, err := redisClient.Ping().Result(); err != nil {
-		fmt.Println("client cannot be started")
+		fmt.Printf("client cannot be started: %s no:%d", addr, db)
 	}
 	var handler requestHandler = requestHandler{
 		client: redisClient,

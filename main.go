@@ -46,6 +46,7 @@ func main() {
 }
 
 func handleMode(mode string, params map[string]string) error {
+	var body string
 	if mode == modes.ServerMode {
 		dbAddress := params["dbAddress"]
 		ipAddress := params["ipAddress"]
@@ -58,15 +59,14 @@ func handleMode(mode string, params map[string]string) error {
 		method := params["method"]
 		key, value := params["key"], params["value"]
 		db, _ := strconv.Atoi(params["db"])
-		var body string
 
 		if err := StartClient(method, key, value, db, &body); err != nil {
 			return fmt.Errorf("client cannot be started: %s", err)
 		}
-		fmt.Println(body)
 	} else {
 		return fmt.Errorf("unknown mode %s: select either \"%s\" or \"%s\"", mode, "server", "client")
 	}
+	fmt.Println(body)
 	return nil
 }
 
@@ -74,7 +74,7 @@ func parseArgs() (string, map[string]string) {
 	mode := flag.StringP("mode", "M", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
 
 	// Server
-	dbAddress := flag.String("dbAddress", "localhost:6379", fmt.Sprintf("[SERVER_ONLY] <database address>"))
+	dbAddress := flag.String("dbAddress", "cache:6379", fmt.Sprintf("[SERVER_ONLY] <database address>"))
 	ipAddress := flag.String("ipAddress", "localhost:8080", fmt.Sprintf("[SERVER_ONLY] <application address>"))
 	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("[SERVER_ONLY] <time to live in minutes>"))
 
