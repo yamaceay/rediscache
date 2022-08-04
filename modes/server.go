@@ -21,8 +21,10 @@ type requestHandler struct {
 }
 
 func StartServer(settings ServerSettings) error {
-	router := initRouter()
 	SERVER_SETTINGS = settings
+
+	router := initRouter()
+
 	listenTo := fmt.Sprintf(":%d", SERVER_SETTINGS.IpPort)
 	if err := http.ListenAndServe(listenTo, router); err != redis.Nil {
 		return fmt.Errorf("server ended")
