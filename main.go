@@ -29,8 +29,7 @@ func main() {
 func handleMode(mode string, params map[string]string) error {
 	var body string
 	if mode == modes.ServerMode {
-		dbHost, dbPort, ipHost, ipPort, ttlMinutes := modes.ReadSettings()
-		if err := StartServer(dbHost, dbPort, ipHost, ipPort, ttlMinutes); err != nil {
+		if err := StartServer(modes.ReadSettings()); err != nil {
 			return fmt.Errorf("server cannot be started: %s", err)
 		}
 	} else if mode == modes.ClientMode {
