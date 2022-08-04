@@ -65,7 +65,7 @@ func handleMode(mode string, params map[string]string) error {
 		}
 		fmt.Println(body)
 	} else {
-		return fmt.Errorf("unknown mode")
+		return fmt.Errorf("unknown mode %s: select either \"%s\" or \"%s\"", mode, "server", "client")
 	}
 	return nil
 }
@@ -74,15 +74,15 @@ func parseArgs() (string, map[string]string) {
 	mode := flag.StringP("mode", "M", modes.ServerMode, fmt.Sprintf("%s / %s", modes.ServerMode, modes.ClientMode))
 
 	// Server
-	dbAddress := flag.String("dbAddress", "localhost:6379", fmt.Sprintf("<database address>"))
-	ipAddress := flag.String("ipAddress", "localhost:8080", fmt.Sprintf("<application address>"))
-	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("<time to live in minutes>"))
+	dbAddress := flag.String("dbAddress", "localhost:6379", fmt.Sprintf("[SERVER_ONLY] <database address>"))
+	ipAddress := flag.String("ipAddress", "localhost:8080", fmt.Sprintf("[SERVER_ONLY] <application address>"))
+	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("[SERVER_ONLY] <time to live in minutes>"))
 
 	// Client
-	method := flag.StringP("method", "X", "", fmt.Sprintf("%s | %s | %s", "", "get", "set"))
-	key := flag.StringP("key", "k", "", "")
-	value := flag.StringP("value", "v", "", "")
-	db := flag.String("db", "0", "")
+	method := flag.StringP("method", "X", "help", fmt.Sprintf("[CLIENT_ONLY] %s | %s | %s", "get", "set", "help"))
+	key := flag.StringP("key", "k", "", "[CLIENT_ONLY]")
+	value := flag.StringP("value", "v", "", "[CLIENT_ONLY]")
+	db := flag.String("db", "0", "[CLIENT_ONLY]")
 
 	flag.Parse()
 

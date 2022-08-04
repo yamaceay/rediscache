@@ -38,7 +38,7 @@ func initRouter() *bunrouter.Router {
 		bunrouter.Use(reqlog.NewMiddleware()),
 	)
 	router.WithGroup("/:db/", func(group *bunrouter.Group) {
-		group.GET("/", dbHandler)
+		group.GET("/help", dbHandler)
 		group.GET("/get", getHandler)
 		group.GET("/set", setHandler)
 	})
