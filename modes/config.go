@@ -1,9 +1,7 @@
 package modes
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -34,48 +32,6 @@ func (s ServerSettings) IpAddress() string {
 	return ToAddress(s.IpHost, s.IpPort)
 }
 
-func SaveSettings(settings ServerSettings) error {
-	os.Truncate("settings.json", 0)
-
-	file, err := os.OpenFile("settings.json", os.O_WRONLY, 0600)
-	defer file.Close()
-
-	if err != nil {
-		return fmt.Errorf("settings.json couldn't be opened")
-	}
-
-	settingsMarshalled, _ := json.MarshalIndent(settings, "", "  ")
-	settingsString := string(settingsMarshalled)
-	if _, err := file.WriteString(settingsString); err != nil {
-		return fmt.Errorf("settings cannot be written")
-	} else {
-		// fmt.Println(settingsString)
-	}
-
-	return nil
-}
-
-func ReadSettings() ServerSettings {
-	defaultSettings := ServerSettings{
-		DbHost:     "cache",
-		DbPort:     6379,
-		IpHost:     "localhost",
-		IpPort:     8080,
-		TTLMinutes: 10080,
-	}
-	file, err := os.Open("settings.json")
-	defer file.Close()
-	if err == nil {
-		var settings ServerSettings
-		if settingsBytes, err := ioutil.ReadAll(file); err == nil {
-			if err := json.Unmarshal(settingsBytes, &settings); err == nil {
-				return settings
-			}
-		}
-	}
-	return defaultSettings
-}
-
 func ToAddress(host string, port int) string {
 	portString := fmt.Sprintf("%d", port)
 	address := strings.Join([]string{host, portString}, ":")
@@ -87,4 +43,40 @@ func FromAddress(address string) (string, int) {
 	host, portString := hostAndPort[0], hostAndPort[1]
 	port, _ := strconv.Atoi(portString)
 	return host, port
+}
+
+func NewSettings(dbHost string, dbPort int, ipHost string, ipPort int, ttlMinutes int) ServerSettings {
+	return ServerSettings{
+		DbHost:     dbHost,
+		DbPort:     dbPort,
+		IpHost:     ipHost,
+		IpPort:     ipPort,
+		TTLMinutes: ttlMinutes,
+	}
+}
+
+func ReadSettings() (string, int, string, int, int) {
+	dbHost := getenv("DB_HOST", "cache")
+	dbPort, _ := strconv.Atoi(getenv("DB_PORT", "6379"))
+	ipHost := getenv("IP_HOST", "localhost")
+	ipPort, _ := strconv.Atoi(getenv("IP_PORT", "8080"))
+	ttlMinutes, _ := strconv.Atoi(getenv("TTL_MINUTES", "10080"))
+	return dbHost, dbPort, ipHost, ipPort, ttlMinutes
+}
+
+func NewRequest(method string, key string, value string, db int) ClientRequest {
+	return ClientRequest{
+		Method: method,
+		Key:    key,
+		Value:  value,
+		Db:     db,
+	}
+}
+
+func getenv(key string, defvalue string) string {
+	if value, yes := os.LookupEnv(key); yes {
+		return value
+	} else {
+		return defvalue
+	}
 }
