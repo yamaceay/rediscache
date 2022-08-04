@@ -27,7 +27,7 @@ func StartServer(dbAddress string, ipAddress string, ttlMinutes int) error {
 	return modes.StartServer(settings)
 }
 
-func StartClient(method string, key string, value string, db int) error {
+func StartClient(method string, key string, value string, db int, response *string) error {
 	settings := modes.ReadSettings()
 	request := modes.ClientRequest{
 		Method: method,
@@ -35,7 +35,7 @@ func StartClient(method string, key string, value string, db int) error {
 		Value:  value,
 		Db:     db,
 	}
-	return modes.StartClient(settings, request)
+	return modes.StartClient(settings, request, response)
 }
 
 func main() {
@@ -58,10 +58,12 @@ func handleMode(mode string, params map[string]string) error {
 		method := params["method"]
 		key, value := params["key"], params["value"]
 		db, _ := strconv.Atoi(params["db"])
+		var body string
 
-		if err := StartClient(method, key, value, db); err != nil {
+		if err := StartClient(method, key, value, db, &body); err != nil {
 			return fmt.Errorf("client cannot be started: %s", err)
 		}
+		fmt.Println(body)
 	} else {
 		return fmt.Errorf("unknown mode")
 	}
@@ -77,7 +79,7 @@ func parseArgs() (string, map[string]string) {
 	ttlMinutes := flag.String("ttlMinutes", "10080", fmt.Sprintf("<time to live in minutes>"))
 
 	// Client
-	method := flag.StringP("method", "X", "", fmt.Sprintf("%s | %s | %s | %s", "", "get", "set", "delete"))
+	method := flag.StringP("method", "X", "", fmt.Sprintf("%s | %s | %s", "", "get", "set"))
 	key := flag.StringP("key", "k", "", "")
 	value := flag.StringP("value", "v", "", "")
 	db := flag.String("db", "0", "")

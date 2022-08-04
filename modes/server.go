@@ -27,7 +27,7 @@ func StartServer(settings ServerSettings) error {
 
 	listenTo := fmt.Sprintf(":%d", SERVER_SETTINGS.IpPort)
 	if err := http.ListenAndServe(listenTo, router); err != redis.Nil {
-		return fmt.Errorf("server ended")
+		return fmt.Errorf("server terminated: %s", err)
 	}
 	return nil
 }
@@ -40,7 +40,6 @@ func initRouter() *bunrouter.Router {
 		group.GET("/", dbHandler)
 		group.GET("/get", getHandler)
 		group.GET("/set", setHandler)
-		group.GET("/delete", deleteHandler)
 	})
 
 	return router
@@ -67,14 +66,14 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	if key != "" {
 		value, err := handler.readOne(key)
 		if err != nil {
-			return fmt.Errorf("redis client cannot get %s", key)
+			return fmt.Errorf("object with key %s cannot be read: %s", key, err)
 		} else {
 			w.Write([]byte(value))
 		}
 	} else {
 		keys, err := handler.readAll()
 		if err != nil {
-			return fmt.Errorf("redis client cannot get all keys")
+			return fmt.Errorf("keys cannot be read: %s", err)
 		} else {
 			keysMarshalled, _ := json.Marshal(keys)
 			w.Write(keysMarshalled)
@@ -94,24 +93,14 @@ func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	if key == "" {
 		return fmt.Errorf("no key given")
 	}
-	if err := handler.writeOne(key, value); err != nil {
-		return fmt.Errorf("redis client cannot set %s to %s", key, value)
-	}
-	return nil
-}
-
-func deleteHandler(w http.ResponseWriter, req bunrouter.Request) error {
-	queries := req.URL.Query()
-
-	key := queries.Get("key")
-	db, _ := strconv.Atoi(queries.Get("db"))
-
-	handler := initHandler(SERVER_SETTINGS.DbAddress(), db)
-	if key == "" {
-		return fmt.Errorf("no key given")
-	}
-	if err := handler.deleteOne(key); err != nil {
-		return fmt.Errorf("redis client cannot find %s", key)
+	if value == "" {
+		if err := handler.deleteOne(key); err != nil {
+			return fmt.Errorf("object with key %s couldn't be deleted: %s", key, err)
+		}
+	} else {
+		if err := handler.writeOne(key, value); err != nil {
+			return fmt.Errorf("object with key %s couldn't be set to %s: %s", key, value, err)
+		}
 	}
 	return nil
 }
@@ -123,7 +112,7 @@ func initHandler(addr string, db int) requestHandler {
 		DB:       db,
 	})
 	if _, err := redisClient.Ping().Result(); err != nil {
-		fmt.Println("redis client cannot be started")
+		fmt.Println("client cannot be started")
 	}
 	var handler requestHandler = requestHandler{
 		client: redisClient,
@@ -171,6 +160,6 @@ func homeHandlerHelp(helpString *string) {
 	*helpString += fmt.Sprintf("---------------------------------------------------------------\n")
 	*helpString += fmt.Sprintf("%7s | %25s | %s\n", "/get", "gets all keys", "")
 	*helpString += fmt.Sprintf("%7s | %25s | %s\n", "/get", "gets the value by a key", "key string")
+	*helpString += fmt.Sprintf("%7s | %25s | %s\n", "/set", "deletes a key-value pair", "key string")
 	*helpString += fmt.Sprintf("%7s | %25s | %s\n", "/set", "updates a key-value pair", "key string, value string")
-	*helpString += fmt.Sprintf("%7s | %25s | %s\n", "/delete", "deletes a key-value pair", "key string")
 }

@@ -28,6 +28,6 @@ RedisCache is my personal Go project, which enables multiple clients to get, set
 
 | Name | Alias | Description                     | Type | Options | Default |
 | :----: | :---: | :-----------------------------: | :-: | :-------: | :-------: |
-| method | X | What to do | string | "", "get", "set", "delete" | "" |
+| method | X | What to do | string | "", "get", "set" | "" |
 | key, value | k, v | Key-value pairs | string | - | "" |
 | db | - | Which database | int | 0, 1, … | 0 |
