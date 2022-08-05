@@ -10,29 +10,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var ServerMode string = "server"
-var ClientMode string = "client"
-
-type ClientRequest struct {
-	Method string `json:"method"`
-	Key    string `json:"key"`
-	Value  string `json:"value"`
-	Db     int    `json:"db"`
-}
 type ServerSettings struct {
-	DbHost     string `yaml:"DB_HOST"`
-	DbPort     int    `yaml:"DB_PORT"`
-	IpHost     string `yaml:"IP_HOST"`
-	IpPort     int    `yaml:"IP_PORT"`
-	TTLMinutes int    `yaml:"TTL_MINUTES"`
+	RedisHost     string `yaml:"REDIS_HOST"`
+	RedisPort     int    `yaml:"REDIS_PORT"`
+	RedisPassword string `yaml:"REDIS_PASSWORD"`
+
+	ServerHost string `yaml:"SERVER_HOST"`
+	ServerPort int    `yaml:"SERVER_PORT"`
+
+	TTLMinutes int `yaml:"TTL_MINUTES"`
 }
 
-func (s ServerSettings) DbAddress() string {
-	return ToAddress(s.DbHost, s.DbPort)
+func (s ServerSettings) RedisAddress() string {
+	return ToAddress(s.RedisHost, s.RedisPort)
 }
 
-func (s ServerSettings) IpAddress() string {
-	return ToAddress(s.IpHost, s.IpPort)
+func (s ServerSettings) ServerAddress() string {
+	return ToAddress(s.ServerHost, s.ServerPort)
 }
 
 func ToAddress(host string, port int) string {
@@ -48,22 +42,28 @@ func FromAddress(address string) (string, int) {
 	return host, port
 }
 
-func NewSettings(dbHost string, dbPort int, ipHost string, ipPort int, ttlMinutes int) ServerSettings {
+func NewSettings(redisHost string, redisPort int, redisPassword string, serverHost string, serverPort int, ttlMinutes int) ServerSettings {
 	return ServerSettings{
-		DbHost:     dbHost,
-		DbPort:     dbPort,
-		IpHost:     ipHost,
-		IpPort:     ipPort,
+		RedisHost:     redisHost,
+		RedisPort:     redisPort,
+		RedisPassword: redisPassword,
+
+		ServerHost: serverHost,
+		ServerPort: serverPort,
+
 		TTLMinutes: ttlMinutes,
 	}
 }
 
 func ReadSettings() ServerSettings {
 	settings := ServerSettings{
-		DbHost:     "cache",
-		DbPort:     6379,
-		IpHost:     "localhost",
-		IpPort:     8080,
+		RedisHost:     "cache",
+		RedisPort:     6379,
+		RedisPassword: "",
+
+		ServerHost: "localhost",
+		ServerPort: 8080,
+
 		TTLMinutes: 10080,
 	}
 	if file, err := os.Open("settings.yml"); err != nil {
@@ -75,21 +75,4 @@ func ReadSettings() ServerSettings {
 	}
 
 	return settings
-}
-
-func NewRequest(method string, key string, value string, db int) ClientRequest {
-	return ClientRequest{
-		Method: method,
-		Key:    key,
-		Value:  value,
-		Db:     db,
-	}
-}
-
-func getenv(key string, defvalue string) string {
-	if value, yes := os.LookupEnv(key); yes {
-		return value
-	} else {
-		return defvalue
-	}
 }

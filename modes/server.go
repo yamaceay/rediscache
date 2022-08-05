@@ -26,7 +26,7 @@ func StartServer(settings ServerSettings) error {
 
 	router := initRouter()
 
-	listenTo := fmt.Sprintf(":%d", SERVER_SETTINGS.IpPort)
+	listenTo := fmt.Sprintf(":%d", SERVER_SETTINGS.ServerPort)
 	if err := http.ListenAndServe(listenTo, router); err != redis.Nil {
 		return fmt.Errorf("server terminated: %s", err)
 	}
@@ -64,7 +64,7 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	params := req.Params().Map()
 	db, _ := strconv.Atoi(params["db"])
 
-	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
+	handler := newHandler(SERVER_SETTINGS.RedisAddress(), db)
 	if key == "" {
 		if keys, err := handler.readAll(); err != nil {
 			return fmt.Errorf("keys cannot be read: %s", err)
@@ -72,10 +72,7 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 			keysMarshalled, _ := json.MarshalIndent(keys, "", "  ")
 			w.Write(keysMarshalled)
 		}
-		return nil
-	}
-
-	if value, err := handler.readOne(key); err != nil {
+	} else if value, err := handler.readOne(key); err != nil {
 		return fmt.Errorf("object with key %s cannot be read: %s", key, err)
 	} else {
 		var prettyJSON bytes.Buffer
@@ -96,7 +93,7 @@ func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	params := req.Params().Map()
 	db, _ := strconv.Atoi(params["db"])
 
-	handler := newHandler(SERVER_SETTINGS.DbAddress(), db)
+	handler := newHandler(SERVER_SETTINGS.RedisAddress(), db)
 	if key == "" {
 		return fmt.Errorf("no key given")
 	}
