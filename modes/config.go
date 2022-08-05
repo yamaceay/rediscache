@@ -2,9 +2,12 @@ package modes
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 var ServerMode string = "server"
@@ -17,11 +20,11 @@ type ClientRequest struct {
 	Db     int    `json:"db"`
 }
 type ServerSettings struct {
-	DbHost     string `json:"dbHost"`
-	DbPort     int    `json:"dbPort"`
-	IpHost     string `json:"ipHost"`
-	IpPort     int    `json:"ipPort"`
-	TTLMinutes int    `json:"ttlMinutes"`
+	DbHost     string `yaml:"DB_HOST"`
+	DbPort     int    `yaml:"DB_PORT"`
+	IpHost     string `yaml:"IP_HOST"`
+	IpPort     int    `yaml:"IP_PORT"`
+	TTLMinutes int    `yaml:"TTL_MINUTES"`
 }
 
 func (s ServerSettings) DbAddress() string {
@@ -55,13 +58,23 @@ func NewSettings(dbHost string, dbPort int, ipHost string, ipPort int, ttlMinute
 	}
 }
 
-func ReadSettings() (string, int, string, int, int) {
-	dbHost := getenv("DB_HOST", "cache")
-	dbPort, _ := strconv.Atoi(getenv("DB_PORT", "6379"))
-	ipHost := getenv("IP_HOST", "localhost")
-	ipPort, _ := strconv.Atoi(getenv("IP_PORT", "8080"))
-	ttlMinutes, _ := strconv.Atoi(getenv("TTL_MINUTES", "10080"))
-	return dbHost, dbPort, ipHost, ipPort, ttlMinutes
+func ReadSettings() ServerSettings {
+	settings := ServerSettings{
+		DbHost:     "cache",
+		DbPort:     6379,
+		IpHost:     "localhost",
+		IpPort:     8080,
+		TTLMinutes: 10080,
+	}
+	if file, err := os.Open("settings.yml"); err != nil {
+		fmt.Printf("settings.yml cannot be opened: %s", err)
+	} else if settingsBytes, err := ioutil.ReadAll(file); err != nil {
+		fmt.Printf("settings.yml cannot be read: %s", err)
+	} else if err := yaml.Unmarshal(settingsBytes, &settings); err != nil {
+		fmt.Printf("settings cannot be parsed: %s", err)
+	}
+
+	return settings
 }
 
 func NewRequest(method string, key string, value string, db int) ClientRequest {

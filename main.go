@@ -8,13 +8,13 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func StartServer(dbHost string, dbPort int, ipHost string, ipPort int, ttlMinutes int) error {
-	settings := modes.NewSettings(dbHost, dbPort, ipHost, ipPort, ttlMinutes)
+func StartServer() error {
+	settings := modes.ReadSettings()
 	return modes.StartServer(settings)
 }
 
 func StartClient(method string, key string, value string, db int, response *string) error {
-	settings := modes.NewSettings(modes.ReadSettings())
+	settings := modes.ReadSettings()
 	request := modes.NewRequest(method, key, value, db)
 	return modes.StartClient(settings, request, response)
 }
@@ -29,7 +29,7 @@ func main() {
 func handleMode(mode string, params map[string]string) error {
 	var body string
 	if mode == modes.ServerMode {
-		if err := StartServer(modes.ReadSettings()); err != nil {
+		if err := StartServer(); err != nil {
 			return fmt.Errorf("server cannot be started: %s", err)
 		}
 	} else if mode == modes.ClientMode {
