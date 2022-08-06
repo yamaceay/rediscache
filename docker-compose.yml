@@ -6,6 +6,7 @@ services:
     ports:
       - 6379:6379
   app:
+    image: yamaceay/rediscache_app
     build: .
     depends_on:
       - cache
