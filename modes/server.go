@@ -15,6 +15,7 @@ import (
 )
 
 var SERVER_SETTINGS ServerSettings
+var HANDLER_MAP map[int]*requestHandler = make(map[int]*requestHandler)
 
 type requestHandler struct {
 	client *redis.Client
@@ -64,7 +65,7 @@ func getHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	params := req.Params().Map()
 	db, _ := strconv.Atoi(params["db"])
 
-	handler := newHandler(SERVER_SETTINGS.RedisAddress(), db)
+	handler := newHandler(db)
 	if key == "" {
 		if keys, err := handler.readAll(); err != nil {
 			return fmt.Errorf("keys cannot be read: %s", err)
@@ -93,7 +94,7 @@ func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	params := req.Params().Map()
 	db, _ := strconv.Atoi(params["db"])
 
-	handler := newHandler(SERVER_SETTINGS.RedisAddress(), db)
+	handler := newHandler(db)
 	if key == "" {
 		return fmt.Errorf("no key given")
 	}
@@ -107,7 +108,13 @@ func setHandler(w http.ResponseWriter, req bunrouter.Request) error {
 	return nil
 }
 
-func newHandler(addr string, db int) *requestHandler {
+func newHandler(db int) *requestHandler {
+	var handler *requestHandler
+	if handler = HANDLER_MAP[db]; handler != nil {
+		return handler
+	}
+
+	addr := SERVER_SETTINGS.RedisAddress()
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
@@ -116,11 +123,14 @@ func newHandler(addr string, db int) *requestHandler {
 	if _, err := redisClient.Ping().Result(); err != nil {
 		fmt.Printf("client cannot be started: %s no:%d", addr, db)
 	}
-	var handler requestHandler = requestHandler{
+	handler = &requestHandler{
 		client: redisClient,
 		mutex:  &sync.RWMutex{},
 	}
-	return &handler
+
+	HANDLER_MAP[db] = handler
+
+	return handler
 }
 
 func (h *requestHandler) readOne(key string) (string, error) {
