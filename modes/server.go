@@ -2,6 +2,7 @@ package modes
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
 )
@@ -18,8 +19,9 @@ var SERVER_SETTINGS ServerSettings
 var HANDLER_MAP map[int]*requestHandler = make(map[int]*requestHandler)
 
 type requestHandler struct {
-	client *redis.Client
-	mutex  *sync.RWMutex
+	client  *redis.Client
+	mutex   *sync.RWMutex
+	context *context.Context
 }
 
 func StartServer(settings ServerSettings) error {
@@ -120,12 +122,15 @@ func newHandler(db int) *requestHandler {
 		Password: "",
 		DB:       db,
 	})
-	if _, err := redisClient.Ping().Result(); err != nil {
+
+	ctx := context.Background()
+	if _, err := redisClient.Ping(ctx).Result(); err != nil {
 		fmt.Printf("client cannot be started: %s no:%d", addr, db)
 	}
 	handler = &requestHandler{
-		client: redisClient,
-		mutex:  &sync.RWMutex{},
+		client:  redisClient,
+		mutex:   &sync.RWMutex{},
+		context: &ctx,
 	}
 
 	HANDLER_MAP[db] = handler
@@ -135,7 +140,7 @@ func newHandler(db int) *requestHandler {
 
 func (h *requestHandler) readOne(key string) (string, error) {
 	h.mutex.RLock()
-	value, err := h.client.Get(key).Result()
+	value, err := h.client.Get(*h.context, key).Result()
 	h.mutex.RUnlock()
 
 	return value, err
@@ -143,7 +148,7 @@ func (h *requestHandler) readOne(key string) (string, error) {
 
 func (h *requestHandler) readAll() ([]string, error) {
 	h.mutex.RLock()
-	keys, err := h.client.Keys("*").Result()
+	keys, err := h.client.Keys(*h.context, "*").Result()
 	h.mutex.RUnlock()
 
 	return keys, err
@@ -153,7 +158,7 @@ func (h *requestHandler) writeOne(key string, value string) error {
 	minutes := time.Duration(SERVER_SETTINGS.TTLMinutes)
 
 	h.mutex.Lock()
-	_, err := h.client.Set(key, value, minutes*time.Minute).Result()
+	_, err := h.client.Set(*h.context, key, value, minutes*time.Minute).Result()
 	h.mutex.Unlock()
 
 	return err
