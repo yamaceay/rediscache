@@ -157,6 +157,14 @@ func (h *requestHandler) readAll() ([]string, error) {
 func (h *requestHandler) writeOne(key string, value string) error {
 	minutes := time.Duration(SERVER_SETTINGS.TTLMinutes)
 
+	if value == "" {
+		h.mutex.Lock()
+		_, err := h.client.Del(*h.context, key).Result()
+		h.mutex.Unlock()
+
+		return err
+	}
+
 	h.mutex.Lock()
 	_, err := h.client.Set(*h.context, key, value, minutes*time.Minute).Result()
 	h.mutex.Unlock()
